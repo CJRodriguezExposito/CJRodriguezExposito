@@ -1,0 +1,756 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fantasy Premier League - Liga Privada</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #fff;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            background: rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+            padding: 20px 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+            margin-bottom: 30px;
+        }
+
+        header .container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        h1 {
+            font-size: 28px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .nav-buttons {
+            display: flex;
+            gap: 15px;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: #8b5cf6;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #7c3aed;
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .btn.active {
+            background: #8b5cf6;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            padding: 30px;
+            margin-bottom: 20px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 100px 20px;
+            font-size: 24px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            background: rgba(139, 92, 246, 0.5);
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+            cursor: pointer;
+            user-select: none;
+            transition: background 0.3s;
+        }
+
+        th:hover {
+            background: rgba(139, 92, 246, 0.7);
+        }
+
+        th.sortable::after {
+            content: ' ↕';
+            opacity: 0.5;
+        }
+
+        th.sorted-asc::after {
+            content: ' ↑';
+            opacity: 1;
+        }
+
+        th.sorted-desc::after {
+            content: ' ↓';
+            opacity: 1;
+        }
+
+        td {
+            padding: 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        tr:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .team-row {
+            cursor: pointer;
+        }
+
+        .rank-gold {
+            color: #fbbf24;
+            font-weight: bold;
+        }
+
+        .text-right {
+            text-align: right;
+        }
+
+        .text-center {
+            text-align: center;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 36px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            font-size: 14px;
+            opacity: 0.8;
+        }
+
+        .back-btn {
+            margin-bottom: 20px;
+        }
+
+        .team-name {
+            font-weight: 600;
+            font-size: 16px;
+        }
+
+        .player-name {
+            font-size: 14px;
+            opacity: 0.7;
+        }
+
+        .gw-selector {
+            margin-bottom: 30px;
+        }
+
+        .gw-selector label {
+            font-weight: 600;
+            margin-right: 15px;
+        }
+
+        .gw-selector select {
+            padding: 10px 20px;
+            border-radius: 8px;
+            border: none;
+            background: #8b5cf6;
+            color: white;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .fixture {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 15px;
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .fixture-team {
+            font-weight: 600;
+            font-size: 18px;
+        }
+
+        .fixture-score {
+            background: #8b5cf6;
+            padding: 15px 30px;
+            border-radius: 8px;
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        .captain-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .captain-item {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px 20px;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .captain-badge {
+            background: #8b5cf6;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+        }
+
+        .section {
+            display: none;
+        }
+
+        .section.active {
+            display: block;
+        }
+
+        h2 {
+            font-size: 32px;
+            margin-bottom: 20px;
+        }
+
+        h3 {
+            font-size: 24px;
+            margin: 30px 0 20px 0;
+        }
+
+        .overflow-x {
+            overflow-x: auto;
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 20px;
+            }
+
+            .nav-buttons {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .fixture {
+                grid-template-columns: 1fr;
+                text-align: center;
+            }
+
+            .fixture-team {
+                font-size: 16px;
+            }
+
+            table {
+                font-size: 14px;
+            }
+
+            th, td {
+                padding: 10px 8px;
+            }
+        }
+
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>
+                <span>🏆</span>
+                Fantasy PL - Liga 854
+            </h1>
+            <div class="nav-buttons">
+                <button class="btn btn-secondary active" onclick="showSection('standings')">
+                    📊 Clasificación
+                </button>
+                <button class="btn btn-secondary" onclick="showSection('fixtures')">
+                    📅 Calendario
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <div id="loading" class="loading">
+            Cargando datos de la liga...
+        </div>
+
+        <!-- Clasificación -->
+        <div id="standings-section" class="section">
+            <div class="card">
+                <div class="overflow-x">
+                    <table id="standings-table">
+                        <thead>
+                            <tr>
+                                <th class="sortable" onclick="sortTable('rank')">Puesto</th>
+                                <th class="sortable" onclick="sortTable('name')">Equipo</th>
+                                <th class="sortable text-right" onclick="sortTable('h2hPoints')">Pts H2H</th>
+                                <th class="sortable text-right" onclick="sortTable('totalPoints')">Pts Totales</th>
+                                <th class="sortable text-center" onclick="sortTable('wins')">V</th>
+                                <th class="sortable text-center" onclick="sortTable('draws')">E</th>
+                                <th class="sortable text-center" onclick="sortTable('losses')">D</th>
+                                <th class="sortable text-center" onclick="sortTable('closeWins')">V<5pts</th>
+                                <th class="sortable text-center" onclick="sortTable('closeLosses')">D<5pts</th>
+                            </tr>
+                        </thead>
+                        <tbody id="standings-body">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Calendario -->
+        <div id="fixtures-section" class="section">
+            <div class="card">
+                <div class="gw-selector">
+                    <label>Seleccionar Jornada:</label>
+                    <select id="gw-select" onchange="loadFixtures(this.value)">
+                    </select>
+                </div>
+                <div id="fixtures-container">
+                </div>
+            </div>
+        </div>
+
+        <!-- Detalles de Equipo -->
+        <div id="team-details-section" class="section">
+            <div class="card">
+                <button class="btn btn-secondary back-btn" onclick="showSection('standings')">
+                    ← Volver a la clasificación
+                </button>
+                <div id="team-details-content">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const LEAGUE_ID = 854;
+        
+        let standings = [];
+        let currentGW = 1;
+        let bootstrapData = null;
+        let sortConfig = { key: 'rank', direction: 'asc' };
+        let allMatches = [];
+
+        async function init() {
+            try {
+                // Cargar bootstrap data
+                const bootstrapRes = await fetch('https://fantasy.premierleague.com/api/bootstrap-static/');
+                bootstrapData = await bootstrapRes.json();
+                
+                const current = bootstrapData.events.find(e => e.is_current);
+                if (current) {
+                    currentGW = current.id;
+                }
+
+                // Poblar selector de jornadas
+                const gwSelect = document.getElementById('gw-select');
+                for (let i = 1; i <= currentGW; i++) {
+                    const option = document.createElement('option');
+                    option.value = i;
+                    option.textContent = 'Gameweek ' + i + (i === currentGW ? ' (Actual)' : '');
+                    if (i === currentGW) option.selected = true;
+                    gwSelect.appendChild(option);
+                }
+
+                await loadAllMatches();
+                await loadStandings();
+                
+                document.getElementById('loading').classList.add('hidden');
+                showSection('standings');
+            } catch (error) {
+                console.error('Error inicializando:', error);
+                document.getElementById('loading').textContent = 'Error cargando datos. Por favor, recarga la página.';
+            }
+        }
+
+        async function loadAllMatches() {
+            try {
+                const matchesPromises = [];
+                for (let gw = 1; gw <= currentGW; gw++) {
+                    matchesPromises.push(
+                        fetch('https://fantasy.premierleague.com/api/leagues-h2h-matches/league/' + LEAGUE_ID + '/?page=1&event=' + gw)
+                            .then(res => res.json())
+                            .then(data => ({ gw: gw, matches: data.results || [] }))
+                    );
+                }
+                
+                const results = await Promise.all(matchesPromises);
+                allMatches = results.flatMap(r => r.matches.map(m => ({ ...m, event: r.gw })));
+            } catch (error) {
+                console.error('Error cargando partidos:', error);
+            }
+        }
+
+        function calculateTeamStats(teamId) {
+            let wins = 0, draws = 0, losses = 0, closeWins = 0, closeLosses = 0;
+            
+            allMatches.forEach(match => {
+                if (match.entry_1_entry === teamId) {
+                    const diff = match.entry_1_points - match.entry_2_points;
+                    if (diff > 0) {
+                        wins++;
+                        if (diff <= 5) closeWins++;
+                    } else if (diff === 0) {
+                        draws++;
+                    } else {
+                        losses++;
+                        if (Math.abs(diff) <= 5) closeLosses++;
+                    }
+                } else if (match.entry_2_entry === teamId) {
+                    const diff = match.entry_2_points - match.entry_1_points;
+                    if (diff > 0) {
+                        wins++;
+                        if (diff <= 5) closeWins++;
+                    } else if (diff === 0) {
+                        draws++;
+                    } else {
+                        losses++;
+                        if (Math.abs(diff) <= 5) closeLosses++;
+                    }
+                }
+            });
+            
+            return { wins, draws, losses, closeWins, closeLosses };
+        }
+
+        async function loadStandings() {
+            try {
+                const leagueRes = await fetch('https://fantasy.premierleague.com/api/leagues-h2h/' + LEAGUE_ID + '/standings/');
+                const leagueData = await leagueRes.json();
+
+                const teamIds = leagueData.standings.results.map(t => t.entry);
+
+                const teamsPromises = teamIds.map(async (teamId) => {
+                    try {
+                        const teamRes = await fetch('https://fantasy.premierleague.com/api/entry/' + teamId + '/');
+                        const teamData = await teamRes.json();
+
+                        const leagueTeam = leagueData.standings.results.find(t => t.entry === teamId);
+                        const stats = calculateTeamStats(teamId);
+
+                        return {
+                            id: teamId,
+                            name: teamData.name,
+                            playerName: teamData.player_first_name + ' ' + teamData.player_last_name,
+                            rank: leagueTeam ? leagueTeam.rank : 0,
+                            h2hPoints: leagueTeam ? leagueTeam.total : 0,
+                            totalPoints: teamData.summary_overall_points,
+                            wins: stats.wins,
+                            draws: stats.draws,
+                            losses: stats.losses,
+                            closeWins: stats.closeWins,
+                            closeLosses: stats.closeLosses
+                        };
+                    } catch (error) {
+                        console.error('Error cargando equipo ' + teamId + ':', error);
+                        return null;
+                    }
+                });
+
+                standings = (await Promise.all(teamsPromises)).filter(t => t !== null);
+                renderStandings();
+            } catch (error) {
+                console.error('Error cargando clasificación:', error);
+            }
+        }
+
+        function renderStandings() {
+            const tbody = document.getElementById('standings-body');
+            tbody.innerHTML = '';
+
+            const sorted = standings.slice().sort((a, b) => {
+                const aVal = a[sortConfig.key];
+                const bVal = b[sortConfig.key];
+                
+                if (typeof aVal === 'string') {
+                    return sortConfig.direction === 'asc' 
+                        ? aVal.localeCompare(bVal)
+                        : bVal.localeCompare(aVal);
+                }
+                
+                return sortConfig.direction === 'asc' 
+                    ? aVal - bVal
+                    : bVal - aVal;
+            });
+
+            sorted.forEach(function(team, idx) {
+                const tr = document.createElement('tr');
+                tr.className = 'team-row';
+                tr.onclick = function() { showTeamDetails(team.id); };
+                
+                tr.innerHTML = 
+                    '<td><span class="' + (idx < 3 ? 'rank-gold' : '') + '">' + team.rank + '</span></td>' +
+                    '<td><div class="team-name">' + team.name + '</div><div class="player-name">' + team.playerName + '</div></td>' +
+                    '<td class="text-right"><strong>' + team.h2hPoints + '</strong></td>' +
+                    '<td class="text-right">' + team.totalPoints + '</td>' +
+                    '<td class="text-center" style="color: #10b981">' + team.wins + '</td>' +
+                    '<td class="text-center" style="color: #fbbf24">' + team.draws + '</td>' +
+                    '<td class="text-center" style="color: #ef4444">' + team.losses + '</td>' +
+                    '<td class="text-center">' + team.closeWins + '</td>' +
+                    '<td class="text-center">' + team.closeLosses + '</td>';
+                
+                tbody.appendChild(tr);
+            });
+
+            document.querySelectorAll('th.sortable').forEach(function(th) {
+                th.classList.remove('sorted-asc', 'sorted-desc');
+            });
+            
+            const sortedHeaders = document.querySelectorAll('th.sortable');
+            sortedHeaders.forEach(function(th) {
+                const onclickAttr = th.getAttribute('onclick');
+                if (onclickAttr && onclickAttr.includes(sortConfig.key)) {
+                    th.classList.add('sorted-' + sortConfig.direction);
+                }
+            });
+        }
+
+        function sortTable(key) {
+            if (sortConfig.key === key) {
+                sortConfig.direction = sortConfig.direction === 'asc' ? 'desc' : 'asc';
+            } else {
+                sortConfig.key = key;
+                sortConfig.direction = 'asc';
+            }
+            renderStandings();
+        }
+
+        async function loadFixtures(gw) {
+            try {
+                const res = await fetch('https://fantasy.premierleague.com/api/leagues-h2h-matches/league/' + LEAGUE_ID + '/?page=1&event=' + gw);
+                const data = await res.json();
+                
+                const container = document.getElementById('fixtures-container');
+                container.innerHTML = '';
+
+                if (!data.results || data.results.length === 0) {
+                    container.innerHTML = '<p style="text-align: center; padding: 40px;">No hay partidos disponibles para esta jornada</p>';
+                    return;
+                }
+
+                data.results.forEach(function(fixture) {
+                    const team1 = standings.find(function(t) { return t.id === fixture.entry_1_entry; });
+                    const team2 = standings.find(function(t) { return t.id === fixture.entry_2_entry; });
+
+                    const div = document.createElement('div');
+                    div.className = 'fixture';
+                    div.innerHTML = 
+                        '<div style="text-align: right;">' +
+                            '<div class="fixture-team">' + (team1 ? team1.name : 'Equipo 1') + '</div>' +
+                            '<div class="player-name">' + (team1 ? team1.playerName : '') + '</div>' +
+                        '</div>' +
+                        '<div class="fixture-score">' +
+                            fixture.entry_1_points + ' - ' + fixture.entry_2_points +
+                        '</div>' +
+                        '<div style="text-align: left;">' +
+                            '<div class="fixture-team">' + (team2 ? team2.name : 'Equipo 2') + '</div>' +
+                            '<div class="player-name">' + (team2 ? team2.playerName : '') + '</div>' +
+                        '</div>';
+                    container.appendChild(div);
+                });
+            } catch (error) {
+                console.error('Error cargando partidos:', error);
+            }
+        }
+
+        async function showTeamDetails(teamId) {
+            showSection('team-details');
+            
+            const content = document.getElementById('team-details-content');
+            content.innerHTML = '<div class="loading">Cargando detalles del equipo...</div>';
+
+            try {
+                const teamRes = await fetch('https://fantasy.premierleague.com/api/entry/' + teamId + '/');
+                const teamData = await teamRes.json();
+
+                const historyRes = await fetch('https://fantasy.premierleague.com/api/entry/' + teamId + '/history/');
+                const historyData = await historyRes.json();
+
+                const captainCounts = {};
+                for (let gw = 1; gw <= currentGW; gw++) {
+                    try {
+                        const picksRes = await fetch('https://fantasy.premierleague.com/api/entry/' + teamId + '/event/' + gw + '/picks/');
+                        const picksData = await picksRes.json();
+                        const captain = picksData.picks.find(function(p) { return p.is_captain; });
+                        
+                        if (captain && bootstrapData) {
+                            const player = bootstrapData.elements.find(function(e) { return e.id === captain.element; });
+                            if (player) {
+                                captainCounts[player.web_name] = (captainCounts[player.web_name] || 0) + 1;
+                            }
+                        }
+                    } catch (error) {
+                        console.error('Error obteniendo capitán GW ' + gw + ':', error);
+                    }
+                }
+
+                const team = standings.find(function(t) { return t.id === teamId; });
+                const stats = calculateTeamStats(teamId);
+
+                const gwRows = historyData.current.slice(0, currentGW).map(function(gw) {
+                    const ranking = gw.overall_rank ? gw.overall_rank.toLocaleString() : '-';
+                    return '<tr>' +
+                        '<td>GW ' + gw.event + '</td>' +
+                        '<td class="text-right"><strong>' + gw.points + '</strong></td>' +
+                        '<td class="text-right">' + gw.total_points + '</td>' +
+                        '<td class="text-right">' + ranking + '</td>' +
+                        '</tr>';
+                }).join('');
+
+                const captainItems = Object.entries(captainCounts)
+                    .sort(function(a, b) { return b[1] - a[1]; })
+                    .map(function(entry) {
+                        return '<div class="captain-item">' +
+                            '<span>' + entry[0] + '</span>' +
+                            '<span class="captain-badge">' + entry[1] + '</span>' +
+                            '</div>';
+                    }).join('');
+
+                content.innerHTML = 
+                    '<h2>' + teamData.name + '</h2>' +
+                    '<p style="font-size: 20px; opacity: 0.8; margin-bottom: 30px;">' +
+                        'Manager: ' + teamData.player_first_name + ' ' + teamData.player_last_name +
+                    '</p>' +
+                    '<div class="stats-grid">' +
+                        '<div class="stat-card" style="background: rgba(16, 185, 129, 0.3);">' +
+                            '<div class="stat-value">' + stats.wins + '</div>' +
+                            '<div class="stat-label">Victorias</div>' +
+                        '</div>' +
+                        '<div class="stat-card" style="background: rgba(251, 191, 36, 0.3);">' +
+                            '<div class="stat-value">' + stats.draws + '</div>' +
+                            '<div class="stat-label">Empates</div>' +
+                        '</div>' +
+                        '<div class="stat-card" style="background: rgba(239, 68, 68, 0.3);">' +
+                            '<div class="stat-value">' + stats.losses + '</div>' +
+                            '<div class="stat-label">Derrotas</div>' +
+                        '</div>' +
+                        '<div class="stat-card" style="background: rgba(59, 130, 246, 0.3);">' +
+                            '<div class="stat-value">' + stats.closeWins + '</div>' +
+                            '<div class="stat-label">Victorias ajustadas (≤5pts)</div>' +
+                        '</div>' +
+                        '<div class="stat-card" style="background: rgba(249, 115, 22, 0.3);">' +
+                            '<div class="stat-value">' + stats.closeLosses + '</div>' +
+                            '<div class="stat-label">Derrotas ajustadas (≤5pts)</div>' +
+                        '</div>' +
+                    '</div>' +
+                    '<h3>Resultados por Jornada</h3>' +
+                    '<div class="overflow-x">' +
+                        '<table>' +
+                            '<thead>' +
+                                '<tr>' +
+                                    '<th>GW</th>' +
+                                    '<th class="text-right">Puntos</th>' +
+                                    '<th class="text-right">Puntos Totales</th>' +
+                                    '<th class="text-right">Ranking</th>' +
+                                '</tr>' +
+                            '</thead>' +
+                            '<tbody>' + gwRows + '</tbody>' +
+                        '</table>' +
+                    '</div>' +
+                    '<h3>Capitanes Elegidos</h3>' +
+                    '<div class="captain-grid">' + captainItems + '</div>';
+            } catch (error) {
+                console.error('Error cargando detalles:', error);
+                content.innerHTML = '<p>Error cargando detalles del equipo</p>';
+            }
+        }
+
+        function showSection(section) {
+            document.querySelectorAll('.section').forEach(function(s) {
+                s.classList.remove('active');
+            });
+            document.querySelectorAll('.nav-buttons .btn').forEach(function(b) {
+                b.classList.remove('active');
+            });
+
+            if (section === 'standings') {
+                document.getElementById('standings-section').classList.add('active');
+                document.querySelector('.nav-buttons .btn:first-child').classList.add('active');
+            } else if (section === 'fixtures') {
+                document.getElementById('fixtures-section').classList.add('active');
+                document.querySelector('.nav-buttons .btn:last-child').classList.add('active');
+                loadFixtures(currentGW);
+            } else if (section === 'team-details') {
+                document.getElementById('team-details-section').classList.add('active');
+            }
+        }
+
+        init();
+    </script>
+</body>
+</html>
