@@ -406,11 +406,18 @@
         let sortConfig = { key: 'rank', direction: 'asc' };
         let allMatches = [];
 
+        // Usar proxy CORS para evitar restricciones
+        const CORS_PROXY = 'https://corsproxy.io/?';
+        
+        async function fetchWithProxy(url) {
+            const response = await fetch(CORS_PROXY + encodeURIComponent(url));
+            return response.json();
+        }
+
         async function init() {
             try {
                 // Cargar bootstrap data
-                const bootstrapRes = await fetch('https://fantasy.premierleague.com/api/bootstrap-static/');
-                bootstrapData = await bootstrapRes.json();
+                bootstrapData = await fetchWithProxy('https://fantasy.premierleague.com/api/bootstrap-static/');
                 
                 const current = bootstrapData.events.find(e => e.is_current);
                 if (current) {
@@ -443,8 +450,7 @@
                 const matchesPromises = [];
                 for (let gw = 1; gw <= currentGW; gw++) {
                     matchesPromises.push(
-                        fetch('https://fantasy.premierleague.com/api/leagues-h2h-matches/league/' + LEAGUE_ID + '/?page=1&event=' + gw)
-                            .then(res => res.json())
+                        fetchWithProxy('https://fantasy.premierleague.com/api/leagues-h2h-matches/league/' + LEAGUE_ID + '/?page=1&event=' + gw)
                             .then(data => ({ gw: gw, matches: data.results || [] }))
                     );
                 }
@@ -490,15 +496,13 @@
 
         async function loadStandings() {
             try {
-                const leagueRes = await fetch('https://fantasy.premierleague.com/api/leagues-h2h/' + LEAGUE_ID + '/standings/');
-                const leagueData = await leagueRes.json();
+                const leagueData = await fetchWithProxy('https://fantasy.premierleague.com/api/leagues-h2h/' + LEAGUE_ID + '/standings/');
 
                 const teamIds = leagueData.standings.results.map(t => t.entry);
 
                 const teamsPromises = teamIds.map(async (teamId) => {
                     try {
-                        const teamRes = await fetch('https://fantasy.premierleague.com/api/entry/' + teamId + '/');
-                        const teamData = await teamRes.json();
+                        const teamData = await fetchWithProxy('https://fantasy.premierleague.com/api/entry/' + teamId + '/');
 
                         const leagueTeam = leagueData.standings.results.find(t => t.entry === teamId);
                         const stats = calculateTeamStats(teamId);
@@ -592,8 +596,7 @@
 
         async function loadFixtures(gw) {
             try {
-                const res = await fetch('https://fantasy.premierleague.com/api/leagues-h2h-matches/league/' + LEAGUE_ID + '/?page=1&event=' + gw);
-                const data = await res.json();
+                const data = await fetchWithProxy('https://fantasy.premierleague.com/api/leagues-h2h-matches/league/' + LEAGUE_ID + '/?page=1&event=' + gw);
                 
                 const container = document.getElementById('fixtures-container');
                 container.innerHTML = '';
@@ -635,17 +638,13 @@
             content.innerHTML = '<div class="loading">Cargando detalles del equipo...</div>';
 
             try {
-                const teamRes = await fetch('https://fantasy.premierleague.com/api/entry/' + teamId + '/');
-                const teamData = await teamRes.json();
-
-                const historyRes = await fetch('https://fantasy.premierleague.com/api/entry/' + teamId + '/history/');
-                const historyData = await historyRes.json();
+                const teamData = await fetchWithProxy('https://fantasy.premierleague.com/api/entry/' + teamId + '/');
+                const historyData = await fetchWithProxy('https://fantasy.premierleague.com/api/entry/' + teamId + '/history/');
 
                 const captainCounts = {};
                 for (let gw = 1; gw <= currentGW; gw++) {
                     try {
-                        const picksRes = await fetch('https://fantasy.premierleague.com/api/entry/' + teamId + '/event/' + gw + '/picks/');
-                        const picksData = await picksRes.json();
+                        const picksData = await fetchWithProxy('https://fantasy.premierleague.com/api/entry/' + teamId + '/event/' + gw + '/picks/');
                         const captain = picksData.picks.find(function(p) { return p.is_captain; });
                         
                         if (captain && bootstrapData) {
